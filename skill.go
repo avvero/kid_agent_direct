@@ -7,7 +7,7 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
-type Skills struct {
+type Configuration struct {
 	Version string  `yaml:"version"`
 	Skills  []Skill `yaml:"skills"`
 }
@@ -18,16 +18,16 @@ type Skill struct {
 	Scripts  []string `yaml:"script"`
 }
 
-func ReadSkills(fileName string) (*Skills, error) {
+func ReadConfiguration(fileName string) (*Configuration, error) {
 	content, err := ioutil.ReadFile(fileName)
 	if err != nil {
 		return nil, err
 	}
-	skills := Skills{}
-	err = yaml.Unmarshal(content, &skills)
+	config := Configuration{}
+	err = yaml.Unmarshal(content, &config)
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("skills: %s", skills)
-	return &skills, nil
+	log.Printf("config: %s", config)
+	return &config, nil
 }

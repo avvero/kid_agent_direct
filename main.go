@@ -2,10 +2,13 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"flag"
 	"log"
+	"regexp"
 	"runtime"
 	"time"
+	"fmt"
 )
 
 var (
@@ -18,7 +21,7 @@ func main() {
 
 	log.Printf("Pulling from: %s", *pollEndpoint)
 
-	_, err := ReadSkills("skills.yaml")
+	config, err := ReadConfiguration("config.yaml")
 	if err != nil {
 		log.Fatal("Error during skills parsing: %s", err)
 	}
@@ -34,7 +37,8 @@ func main() {
 				} else if len(body) > 0 {
 					task := &Task{}
 					json.Unmarshal(body, task)
-					handleTask(task)
+					err := handleTask(config, task)
+					log.Printf("Error during task handling: %s", err)
 				}
 			}
 		}
@@ -42,13 +46,41 @@ func main() {
 	runtime.Goexit()
 }
 
-func handleTask(task *Task) {
+func handleTask(config *Configuration, task *Task) error {
 	log.Printf("Task is: %s", task.Value)
-	stdout, err := execCommand(task.Value)
-	if err != nil {
-		log.Printf("Error during command execution: %s", err)
+
+	var matchedSkill *Skill
+
+	for _, skill := range config.Skills {
+		matched, err := regexp.MatchString(skill.Pattern, task.Value)
+		if err != nil {
+			return err
+		}
+		if matched {
+			matchedSkill = &skill
+			break
+		}
 	}
-	if stdout != nil {
-		log.Printf("%s\n", stdout)
+	if matchedSkill == nil {
+		return errors.New("Can't handle task - don't know how")
 	}
+
+
+	var v1 interface{}
+	var v2 interface{}
+	var v3 interface{}
+	var v4 interface{}
+	var v5 interface{}
+	Sscanf(task.Value, matched.Template, &v1, &v2, &v3, &v4, &v5)
+
+	for _, script := range matchedSkill.Scripts {
+		stdout, err := execCommand(script)
+		if err != nil {
+			return err
+		}
+		if stdout != nil {
+			log.Printf("%s\n", stdout)
+		}
+	}
+	return nil
 }
