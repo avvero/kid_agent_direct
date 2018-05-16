@@ -2,12 +2,8 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"flag"
-	"io/ioutil"
 	"log"
-	"net/http"
-	"os/exec"
 	"runtime"
 	"time"
 )
@@ -21,6 +17,11 @@ func main() {
 	flag.Parse()
 
 	log.Printf("Pulling from: %s", *pollEndpoint)
+
+	_, err := ReadSkills("skills.yaml")
+	if err != nil {
+		log.Fatal("Error during skills parsing: %s", err)
+	}
 
 	ticker := time.NewTicker(time.Duration(*pullInterval) * time.Second)
 	go func() {
@@ -41,42 +42,13 @@ func main() {
 	runtime.Goexit()
 }
 
-type Task struct {
-	Value string `json:"value,omitempty"`
-}
-
 func handleTask(task *Task) {
 	log.Printf("Task is: %s", task.Value)
-
-	cmd := exec.Command(task.Value)
-	stderr, err := cmd.StderrPipe()
+	stdout, err := execCommand(task.Value)
 	if err != nil {
-		log.Printf("Error: %s", err)
-		return
+		log.Printf("Error during command execution: %s", err)
 	}
-	if err := cmd.Start(); err != nil {
-		log.Printf("Error: %s", err)
-		return
+	if stdout != nil {
+		log.Printf("%s\n", stdout)
 	}
-	slurp, _ := ioutil.ReadAll(stderr)
-	log.Printf("%s\n", slurp)
-	if err := cmd.Wait(); err != nil {
-		log.Printf("Error: %s", err)
-	}
-}
-
-func callEndpoint(url string) ([]byte, error) {
-	client := &http.Client{
-		Timeout: time.Duration(5 * time.Second),
-	}
-	req, err := http.NewRequest("GET", url, nil)
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	if resp.StatusCode != 200 {
-		return nil, errors.New("Status " + resp.Status)
-	}
-	defer resp.Body.Close()
-	return ioutil.ReadAll(resp.Body)
 }

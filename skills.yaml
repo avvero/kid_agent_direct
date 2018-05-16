@@ -1,0 +1,11 @@
+version: 1.0
+skills:
+  - pattern: 'fxbank create tag .*'  
+    template: 'fxbank create tag %s for %s'
+    script:
+      - echo $1
+      - echo $2
+
+  - pattern: '.*'      
+    script:
+      - echo $1   
