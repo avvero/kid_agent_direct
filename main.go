@@ -10,7 +10,6 @@ import (
 	"os/exec"
 	"runtime"
 	"time"
-	"fmt"
 )
 
 var (
@@ -34,21 +33,7 @@ func main() {
 				} else if len(body) > 0 {
 					task := &Task{}
 					json.Unmarshal(body, task)
-					log.Printf("Task is: %s", task.Value)
-
-					cmd := exec.Command(task.Value)
-					stderr, err := cmd.StderrPipe()
-					if err != nil {
-						log.Fatal(err)
-					}				
-					if err := cmd.Start(); err != nil {
-						log.Fatal(err)
-					}			
-					slurp, _ := ioutil.ReadAll(stderr)
-					fmt.Printf("%s\n", slurp)			
-					if err := cmd.Wait(); err != nil {
-						log.Fatal(err)
-					}
+					handleTask(task)
 				}
 			}
 		}
@@ -58,6 +43,26 @@ func main() {
 
 type Task struct {
 	Value string `json:"value,omitempty"`
+}
+
+func handleTask(task *Task) {
+	log.Printf("Task is: %s", task.Value)
+
+	cmd := exec.Command(task.Value)
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		log.Printf("Error: %s", err)
+		return
+	}
+	if err := cmd.Start(); err != nil {
+		log.Printf("Error: %s", err)
+		return
+	}
+	slurp, _ := ioutil.ReadAll(stderr)
+	log.Printf("%s\n", slurp)
+	if err := cmd.Wait(); err != nil {
+		log.Printf("Error: %s", err)
+	}
 }
 
 func callEndpoint(url string) ([]byte, error) {
