@@ -8,4 +8,4 @@ skills:
 
   - pattern: '.*'      
     script:
-      - echo $1   
+      - echo $0   

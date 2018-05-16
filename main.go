@@ -64,23 +64,34 @@ func handleTask(config *Configuration, task *Task) error {
 	if matchedSkill == nil {
 		return errors.New("Can't handle task - don't know how")
 	}
-
-
-	var v1 interface{}
-	var v2 interface{}
-	var v3 interface{}
-	var v4 interface{}
-	var v5 interface{}
-	Sscanf(task.Value, matched.Template, &v1, &v2, &v3, &v4, &v5)
-
-	for _, script := range matchedSkill.Scripts {
-		stdout, err := execCommand(script)
+	if matchedSkill.Template == "" {
+		stdout, err := execCommand(task.Value)
 		if err != nil {
 			return err
 		}
 		if stdout != nil {
 			log.Printf("%s\n", stdout)
 		}
+		return nil
+	} else {
+		var v1 interface{}
+		var v2 interface{}
+		var v3 interface{}
+		var v4 interface{}
+		var v5 interface{}
+		fmt.Sscanf(task.Value, matchedSkill.Template, &v1, &v2, &v3, &v4, &v5)
+		log.Printf("%s", v1)
+		log.Printf("%s", v2)
+	
+		for _, script := range matchedSkill.Scripts {
+			stdout, err := execCommand(script)
+			if err != nil {
+				return err
+			}
+			if stdout != nil {
+				log.Printf("%s\n", stdout)
+			}
+		}
+		return nil
 	}
-	return nil
 }
