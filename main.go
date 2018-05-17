@@ -8,11 +8,10 @@ import (
 	"regexp"
 	"runtime"
 	"time"
-	"fmt"
 )
 
 var (
-	pollEndpoint = flag.String("pollEndpoint", "", "poll endpoint")
+	pollEndpoint = flag.String("pollEndpoint", "https://f2g.site/bot/kid/api/tasks/29:1rxhBdD4tY9pijFOBxI4JatuCjaCxMFkKFgRszgxFbQ0/poll", "poll endpoint")
 	pullInterval = flag.Int("pullInterval", 1, "update interval for infos")
 )
 
@@ -74,15 +73,11 @@ func handleTask(config *Configuration, task *Task) error {
 		}
 		return nil
 	} else {
-		var v1 interface{}
-		var v2 interface{}
-		var v3 interface{}
-		var v4 interface{}
-		var v5 interface{}
-		fmt.Sscanf(task.Value, matchedSkill.Template, &v1, &v2, &v3, &v4, &v5)
-		log.Printf("%s", v1)
-		log.Printf("%s", v2)
-	
+		//lex := newLexer(task.Value)
+		//go lex.tokenize()
+
+		//log.Printf("%s\n", lex.tokens)
+
 		for _, script := range matchedSkill.Scripts {
 			stdout, err := execCommand(script)
 			if err != nil {
