@@ -1,7 +1,9 @@
 version: 1.0
 skills:
   - pattern: '.*'  
-    template: 'fxbank create tag %s for %s'
+    tokens: 
+      TARGET: '[fxbank]+'
+      TAG: '[\\d\\.]+'
     script:
       - echo $1
       - echo $2

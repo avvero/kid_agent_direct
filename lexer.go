@@ -15,10 +15,10 @@ func (tok token) String() string {
 	return fmt.Sprintf("{%s '%s' %d}", tok.tokenType, tok.value, tok.pos)
 }
 
-var baseDictionary = map[string]*regexp.Regexp{
-	"WORD":        regexp.MustCompile("[A-Za-z\\d]+"),
+var baseDictionary = map[string]*regexp.Regexp{	
+	"WORD":         regexp.MustCompile("[^\\s]+"),
 	"SPACE":       regexp.MustCompile("[\\s]+"),
-	"PUNCTUATION": regexp.MustCompile("[\\p{P}\\p{S}]+"),
+	"PUNCTUATION": regexp.MustCompile("[\\.,:!]+"),
 }
 
 type stateFn func(*lexer) stateFn

@@ -37,7 +37,9 @@ func main() {
 					task := &Task{}
 					json.Unmarshal(body, task)
 					err := handleTask(config, task)
-					log.Printf("Error during task handling: %s", err)
+					if err != nil {
+						log.Printf("Error during task handling: %s", err)
+					} 					
 				}
 			}
 		}
@@ -63,30 +65,28 @@ func handleTask(config *Configuration, task *Task) error {
 	if matchedSkill == nil {
 		return errors.New("Can't handle task - don't know how")
 	}
-	if matchedSkill.Template == "" {
-		stdout, err := execCommand(task.Value)
+	dictionary := make(map[string]*regexp.Regexp)
+	for k, v := range matchedSkill.Tokens {
+		dictionary[k] = regexp.MustCompile(v)
+	}
+	lex := newLexer(dictionary, task.Value)
+	go lex.tokenize()
+	for {
+		tok := <-lex.tokens
+		log.Printf("%s\n", tok)
+		if tok.tokenType == "EOF" {
+			break
+		}
+	}
+
+	for _, script := range matchedSkill.Scripts {
+		stdout, err := execCommand(script)
 		if err != nil {
 			return err
 		}
 		if stdout != nil {
 			log.Printf("%s\n", stdout)
 		}
-		return nil
-	} else {
-		//lex := newLexer(task.Value)
-		//go lex.tokenize()
-
-		//log.Printf("%s\n", lex.tokens)
-
-		for _, script := range matchedSkill.Scripts {
-			stdout, err := execCommand(script)
-			if err != nil {
-				return err
-			}
-			if stdout != nil {
-				log.Printf("%s\n", stdout)
-			}
-		}
-		return nil
 	}
+	return nil
 }
