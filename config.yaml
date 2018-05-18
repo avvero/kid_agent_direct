@@ -5,8 +5,7 @@ skills:
       TARGET: '[fxbank]+'
       TAG: '[\\d\\.]+'
     script:
-      - echo $1
-      - echo $2
+      - echo {{.TARGET}} with tag {{.TAG}}
 
   - pattern: '.*'      
     script:

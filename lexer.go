@@ -28,7 +28,7 @@ type lexer struct {
 	start      int // The position of the last emission
 	pos        int // The current position of the lexer
 	input      string
-	tokens     chan token
+	tokens     []token
 	state      stateFn
 }
 
@@ -60,7 +60,7 @@ func (l *lexer) peek() (val string) {
 func (l *lexer) emit(t string) {
 	val := l.input[l.start:l.pos]
 	tok := token{val, l.start, t}
-	l.tokens <- tok
+	l.tokens = append(l.tokens, tok)
 	l.start = l.pos
 }
 
@@ -106,5 +106,5 @@ func step(t string, rgx *regexp.Regexp) func(l *lexer) stateFn {
 }
 
 func newLexer(dictionary map[string]*regexp.Regexp, input string) *lexer {
-	return &lexer{dictionary, 0, 0, input, make(chan token), nil}
+	return &lexer{dictionary, 0, 0, input, make([]token, 0), nil}
 }

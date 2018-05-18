@@ -8,6 +8,8 @@ import (
 	"regexp"
 	"runtime"
 	"time"
+	"text/template"
+	"os"
 )
 
 var (
@@ -38,6 +40,7 @@ func main() {
 					json.Unmarshal(body, task)
 					err := handleTask(config, task)
 					if err != nil {
+						//TODO should reply to the kid
 						log.Printf("Error during task handling: %s", err)
 					} 					
 				}
@@ -48,6 +51,7 @@ func main() {
 }
 
 func handleTask(config *Configuration, task *Task) error {
+	log.Printf("--------", task.Value)
 	log.Printf("Task is: %s", task.Value)
 
 	var matchedSkill *Skill
@@ -63,6 +67,7 @@ func handleTask(config *Configuration, task *Task) error {
 		}
 	}
 	if matchedSkill == nil {
+		//TODO should reply to the kid
 		return errors.New("Can't handle task - don't know how")
 	}
 	dictionary := make(map[string]*regexp.Regexp)
@@ -70,23 +75,27 @@ func handleTask(config *Configuration, task *Task) error {
 		dictionary[k] = regexp.MustCompile(v)
 	}
 	lex := newLexer(dictionary, task.Value)
-	go lex.tokenize()
-	for {
-		tok := <-lex.tokens
-		log.Printf("%s\n", tok)
-		if tok.tokenType == "EOF" {
-			break
-		}
+	lex.tokenize()
+	keys := make(map[string]string)
+	for _, v := range  lex.tokens {
+		keys[v.tokenType] = v.value
+		log.Printf("%v", v)
 	}
 
 	for _, script := range matchedSkill.Scripts {
-		stdout, err := execCommand(script)
-		if err != nil {
-			return err
-		}
-		if stdout != nil {
-			log.Printf("%s\n", stdout)
-		}
+		command, err := template.New("command").Parse(script)
+		if err != nil { panic(err) }
+		err = command.Execute(os.Stdout, keys)
+		if err != nil { panic(err) }
+
+		//stdout, err := execCommand(command)
+		//if err != nil {
+		//	return err
+		//}
+		//if stdout != nil {
+		//	TODO should reply to the kid
+			//log.Printf("%s\n", stdout)
+		//}
 	}
 	return nil
 }
