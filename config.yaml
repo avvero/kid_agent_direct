@@ -1,12 +1,12 @@
 version: 1.0
 skills:
-  - pattern: '.*'  
+  - pattern: 'fxbank.*'
     tokens: 
       TARGET: '[fxbank]+'
-      TAG: '[\\d\\.]+'
+      TAG: '[\d\.]+'
     script:
-      - echo {{.TARGET}} with tag {{.TAG}}
+      - echo '{{.TARGET}} with tag {{.TAG}}'
 
   - pattern: '.*'      
     script:
-      - echo $0   
+      - "{{.WORD}}"

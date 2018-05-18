@@ -9,7 +9,7 @@ import (
 	"runtime"
 	"time"
 	"text/template"
-	"os"
+	"bytes"
 )
 
 var (
@@ -77,25 +77,31 @@ func handleTask(config *Configuration, task *Task) error {
 	lex := newLexer(dictionary, task.Value)
 	lex.tokenize()
 	keys := make(map[string]string)
+	log.Printf("%v", keys)
 	for _, v := range  lex.tokens {
 		keys[v.tokenType] = v.value
 		log.Printf("%v", v)
 	}
 
 	for _, script := range matchedSkill.Scripts {
-		command, err := template.New("command").Parse(script)
-		if err != nil { panic(err) }
-		err = command.Execute(os.Stdout, keys)
-		if err != nil { panic(err) }
+		commandTemplate, err := template.New("command").Parse(script)
+		if err != nil {
+			return err
+		}
+		buf := new(bytes.Buffer)
+		err = commandTemplate.Execute(buf, keys)
+		if err != nil {
+			return err
+		}
 
-		//stdout, err := execCommand(command)
-		//if err != nil {
-		//	return err
-		//}
-		//if stdout != nil {
-		//	TODO should reply to the kid
-			//log.Printf("%s\n", stdout)
-		//}
+		//out, err := exec.Command("sh","-c",buf.String()).Output()
+
+		out, err := execCommand(buf.String())
+		if err != nil {
+			return err
+		}
+		//TODO should reply to the kid
+		log.Printf("%s\n", out)
 	}
 	return nil
 }

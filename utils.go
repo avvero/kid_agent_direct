@@ -25,7 +25,7 @@ func callEndpoint(url string) ([]byte, error) {
 }
 
 func execCommand(command string) ([]byte, error) {
-	cmd := exec.Command(command)
+	cmd := exec.Command("sh", "-c", command)
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
 		return nil, err
