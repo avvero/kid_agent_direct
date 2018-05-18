@@ -2,11 +2,17 @@ version: 1.0
 skills:
   - pattern: 'fxbank.*'
     tokens: 
-      TARGET: '[fxbank]+'
+      TARGET: 'fxbank'
       TAG: '[\d\.]+'
     script:
       - echo '{{.TARGET}} with tag {{.TAG}}'
 
-  - pattern: '.*'      
+  - pattern: 'send'
+    tokens:
+      CONVERSATION_ID: 'to\s*'
     script:
-      - "{{.WORD}}"
+      - "curl -H \"Content-Type: application/json\" -X POST -d '{\"conversationId\": \"29:1u0eB2K6HZPu605COMMKJTF9l116lj7KvThSXxxxe3Dg\", \"text\": \"test\"}' https://f2g.site/bot/herald/api/message"
+
+  - pattern: '.*'
+    script:
+      - "{{.COMMAND}}"

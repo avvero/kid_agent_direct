@@ -24,7 +24,6 @@ var baseDictionary = map[string]*regexp.Regexp{
 type stateFn func(*lexer) stateFn
 
 type lexer struct {
-	dictionary map[string]*regexp.Regexp
 	start      int // The position of the last emission
 	pos        int // The current position of the lexer
 	input      string
@@ -86,12 +85,6 @@ func lexData(l *lexer) stateFn {
 		return step("SPACE", baseDictionary["SPACE"])
 	}
 
-	for k, v := range l.dictionary {
-		if v.MatchString(s) {
-			return step(k, v)
-		}
-	}
-
 	return step("WORD", baseDictionary["WORD"])
 }
 
@@ -105,6 +98,6 @@ func step(t string, rgx *regexp.Regexp) func(l *lexer) stateFn {
 	}
 }
 
-func newLexer(dictionary map[string]*regexp.Regexp, input string) *lexer {
-	return &lexer{dictionary, 0, 0, input, make([]token, 0), nil}
+func newLexer(input string) *lexer {
+	return &lexer{0, 0, input, make([]token, 0), nil}
 }

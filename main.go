@@ -51,7 +51,7 @@ func main() {
 }
 
 func handleTask(config *Configuration, task *Task) error {
-	log.Printf("--------", task.Value)
+	log.Println("--------")
 	log.Printf("Task is: %s", task.Value)
 
 	var matchedSkill *Skill
@@ -62,7 +62,7 @@ func handleTask(config *Configuration, task *Task) error {
 			return err
 		}
 		if matched {
-			matchedSkill = &skill
+			matchedSkill = skill
 			break
 		}
 	}
@@ -70,17 +70,26 @@ func handleTask(config *Configuration, task *Task) error {
 		//TODO should reply to the kid
 		return errors.New("Can't handle task - don't know how")
 	}
-	dictionary := make(map[string]*regexp.Regexp)
-	for k, v := range matchedSkill.Tokens {
-		dictionary[k] = regexp.MustCompile(v)
-	}
-	lex := newLexer(dictionary, task.Value)
+	log.Printf("Skill:  %v", matchedSkill)
+	lex := newLexer(task.Value)
 	lex.tokenize()
-	keys := make(map[string]string)
-	log.Printf("%v", keys)
+	log.Println("Tokens:")
 	for _, v := range  lex.tokens {
-		keys[v.tokenType] = v.value
-		log.Printf("%v", v)
+		log.Printf("  %v", v)
+	}
+	// parse keys
+	keys := make(map[string]string)
+	keys["COMMAND"] = task.Value
+	for v, skillToketRegex := range matchedSkill.TokensRegex {
+		for _, stringTokens := range lex.tokens {
+			if skillToketRegex.MatchString(stringTokens.value) {
+				keys[v] = stringTokens.value
+			}
+		}
+	}
+	log.Println("Keys:")
+	for k, v := range keys {
+		log.Printf("  %s: %s", k, v)
 	}
 
 	for _, script := range matchedSkill.Scripts {
@@ -101,7 +110,7 @@ func handleTask(config *Configuration, task *Task) error {
 			return err
 		}
 		//TODO should reply to the kid
-		log.Printf("%s\n", out)
+		log.Printf("Command out: %s\n", out)
 	}
 	return nil
 }

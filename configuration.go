@@ -2,20 +2,21 @@ package main
 
 import (
 	"io/ioutil"
+	"gopkg.in/yaml.v2"
+	"regexp"
 	"log"
-
-	yaml "gopkg.in/yaml.v2"
 )
 
 type Configuration struct {
 	Version string  `yaml:"version"`
-	Skills  []Skill `yaml:"skills"`
+	Skills  []*Skill `yaml:"skills"`
 }
 
 type Skill struct {
-	Pattern string            `yaml:"pattern"`
-	Tokens  map[string]string `yaml:"tokens"`
-	Scripts []string          `yaml:"script"`
+	Pattern     string            `yaml:"pattern"`
+	Tokens      map[string]string `yaml:"tokens"`
+	TokensRegex map[string]*regexp.Regexp
+	Scripts     []string          `yaml:"script"`
 }
 
 func ReadConfiguration(fileName string) (*Configuration, error) {
@@ -27,6 +28,13 @@ func ReadConfiguration(fileName string) (*Configuration, error) {
 	err = yaml.Unmarshal(content, &config)
 	if err != nil {
 		return nil, err
+	}
+	//todo too dirty
+	for _, skill := range config.Skills {
+		skill.TokensRegex = make(map[string]*regexp.Regexp)
+		for k, v := range skill.Tokens {
+			skill.TokensRegex[k] = regexp.MustCompile(v)
+		}
 	}
 	log.Printf("config: %s", config)
 	return &config, nil
