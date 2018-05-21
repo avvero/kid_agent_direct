@@ -8,7 +8,8 @@ import (
 )
 
 type Configuration struct {
-	Version string  `yaml:"version"`
+	Version string   `yaml:"version"`
+	Channel string   `yaml:"channel"`
 	Skills  []*Skill `yaml:"skills"`
 }
 
