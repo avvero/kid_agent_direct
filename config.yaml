@@ -1,4 +1,5 @@
 version: 1.0
+host: https://f2g.site/bot/kid
 channel: 29:1d4jXkt5gxQ8MWUx8i-zX1V9OS3alOt1gT5SqU5MlXx8
 skills:
   - pattern: 'fxbank.*'
@@ -22,6 +23,12 @@ skills:
       BRANCH: 'branch_.*'
     script:
       - "please release {{.TAG}} for me from {{.BRANCH}}"
+
+# echo
+  - pattern: '.*'
+    message:
+      channel: 29:1d4jXkt5gxQ8MWUx8i-zX1V9OS3alOt1gT5SqU5MlXx8
+      text: "Echo: {{.COMMAND}}"
 
   - pattern: '.*'
     script:

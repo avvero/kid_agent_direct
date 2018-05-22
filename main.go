@@ -8,9 +8,9 @@ import (
 	"regexp"
 	"runtime"
 	"time"
-	"text/template"
-	"bytes"
 	"fmt"
+	"github.com/avvero/kid_agent_direct/api"
+	"github.com/avvero/kid_agent_direct/utils"
 )
 
 var (
@@ -25,22 +25,23 @@ func main() {
 		log.Fatal("Error during skills parsing: %s", err)
 	}
 
-	pollEndpoint := fmt.Sprintf("https://f2g.site/bot/kid/api/tasks/%s/poll", config.Channel)
+	pollEndpoint := fmt.Sprintf("%s/api/tasks/%s/poll", config.Host, config.Channel)
 	log.Printf("Pulling from: %s", pollEndpoint)
 
+	apiClient := api.NewApiClient(config.Host)
 
 	ticker := time.NewTicker(time.Duration(*pullInterval) * time.Second)
 	go func() {
 		for {
 			select {
 			case <-ticker.C:
-				body, err := callEndpoint(pollEndpoint)
+				body, err := utils.HttpGet(pollEndpoint)
 				if err != nil {
 					log.Printf("Error during task pulling: %s", err)
 				} else if len(body) > 0 {
 					task := &Task{}
 					json.Unmarshal(body, task)
-					err := handleTask(config, task)
+					err := handleTask(config, apiClient, task)
 					if err != nil {
 						//TODO should reply to the kid
 						log.Printf("Error during task handling: %s", err)
@@ -52,7 +53,7 @@ func main() {
 	runtime.Goexit()
 }
 
-func handleTask(config *Configuration, task *Task) error {
+func handleTask(config *Configuration, apiClient *api.ApiClient, task *Task) error {
 	log.Println("--------")
 	log.Printf("Task is: %s", task.Value)
 
@@ -73,6 +74,7 @@ func handleTask(config *Configuration, task *Task) error {
 		return errors.New("Can't handle task - don't know how")
 	}
 	log.Printf("Skill:  %v", matchedSkill)
+	// Command tokenization
 	lex := newLexer(task.Value)
 	lex.tokenize()
 	log.Println("Tokens:")
@@ -93,21 +95,23 @@ func handleTask(config *Configuration, task *Task) error {
 	for k, v := range keys {
 		log.Printf("  %s: %s", k, v)
 	}
+	//
 
+	// Command execution
+	if matchedSkill.Message != nil {
+		message, err:= utils.ProcessTemplate(matchedSkill.Message.Text, keys)
+		if err != nil {
+			return err
+		}
+		log.Printf("Send message: %s\n", message)
+		return apiClient.SendMessage(matchedSkill.Message.Channel, message)
+	}
 	for _, script := range matchedSkill.Scripts {
-		commandTemplate, err := template.New("command").Parse(script)
-		if err != nil {
-			return err
-		}
-		buf := new(bytes.Buffer)
-		err = commandTemplate.Execute(buf, keys)
-		if err != nil {
-			return err
-		}
+		command, err:= utils.ProcessTemplate(script, keys)
 
 		//out, err := exec.Command("sh","-c",buf.String()).Output()
-		log.Printf("Command: %s\n", buf.String())
-		out, err := execCommand(buf.String())
+		log.Printf("Command: %s\n", command)
+		out, err := utils.ExecCommand(command)
 		if err != nil {
 			return err
 		}

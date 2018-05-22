@@ -9,6 +9,7 @@ import (
 
 type Configuration struct {
 	Version string   `yaml:"version"`
+	Host    string   `yaml:"host"`
 	Channel string   `yaml:"channel"`
 	Skills  []*Skill `yaml:"skills"`
 }
@@ -18,6 +19,12 @@ type Skill struct {
 	Tokens      map[string]string `yaml:"tokens"`
 	TokensRegex map[string]*regexp.Regexp
 	Scripts     []string          `yaml:"script"`
+	Message     *Message          `yaml:"message"`
+}
+
+type Message struct {
+	Channel string `yaml:"channel"`
+	Text    string `yaml:"text"`
 }
 
 func ReadConfiguration(fileName string) (*Configuration, error) {
