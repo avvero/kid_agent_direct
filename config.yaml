@@ -26,10 +26,8 @@ skills:
 
 # echo
   - pattern: '.*'
+    script:
+      - "{{.COMMAND}}"
     message:
       channel: 29:1d4jXkt5gxQ8MWUx8i-zX1V9OS3alOt1gT5SqU5MlXx8
       text: "Echo: {{.COMMAND}}"
-
-  - pattern: '.*'
-    script:
-      - "{{.COMMAND}}"

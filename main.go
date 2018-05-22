@@ -98,14 +98,7 @@ func handleTask(config *Configuration, apiClient *api.ApiClient, task *Task) err
 	//
 
 	// Command execution
-	if matchedSkill.Message != nil {
-		message, err:= utils.ProcessTemplate(matchedSkill.Message.Text, keys)
-		if err != nil {
-			return err
-		}
-		log.Printf("Send message: %s\n", message)
-		return apiClient.SendMessage(matchedSkill.Message.Channel, message)
-	}
+	// Script goes first
 	for _, script := range matchedSkill.Scripts {
 		command, err:= utils.ProcessTemplate(script, keys)
 
@@ -117,6 +110,15 @@ func handleTask(config *Configuration, apiClient *api.ApiClient, task *Task) err
 		}
 		//TODO should reply to the kid
 		log.Printf("Command out: %s\n", out)
+	}
+	// Send message if needed
+	if matchedSkill.Message != nil {
+		message, err:= utils.ProcessTemplate(matchedSkill.Message.Text, keys)
+		if err != nil {
+			return err
+		}
+		log.Printf("Send message: %s\n", message)
+		return apiClient.SendMessage(matchedSkill.Message.Channel, message)
 	}
 	return nil
 }
