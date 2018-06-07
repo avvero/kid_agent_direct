@@ -47,3 +47,16 @@ func ReadConfiguration(fileName string) (*Configuration, error) {
 	log.Printf("config: %s", config)
 	return &config, nil
 }
+
+func (c *Configuration) findSkill(value string) (*Skill, error) {
+	for _, skill := range c.Skills {
+		matched, err := regexp.MatchString(skill.Pattern, value)
+		if err != nil {
+			return nil, err
+		}
+		if matched {
+			return skill, nil
+		}
+	}
+	return nil, nil
+}

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"flag"
 	"log"
-	"regexp"
 	"runtime"
 	"time"
 	"fmt"
@@ -57,49 +56,17 @@ func handleTask(config *Configuration, apiClient *api.ApiClient, task *Task) err
 	log.Println("--------")
 	log.Printf("Task is: %s", task.Value)
 
-	var matchedSkill *Skill
-
-	for _, skill := range config.Skills {
-		matched, err := regexp.MatchString(skill.Pattern, task.Value)
-		if err != nil {
-			return err
-		}
-		if matched {
-			matchedSkill = skill
-			break
-		}
-	}
-	if matchedSkill == nil {
+	skill,_ := config.findSkill(task.Value)
+	if skill == nil {
 		//TODO should reply to the kid
 		return errors.New("Can't handle task - don't know how")
 	}
-	log.Printf("Skill:  %v", matchedSkill)
-	// Command tokenization
-	lex := newLexer(task.Value)
-	lex.tokenize()
-	log.Println("Tokens:")
-	for _, v := range  lex.tokens {
-		log.Printf("  %v", v)
-	}
-	// parse keys
-	keys := make(map[string]string)
-	keys["COMMAND"] = task.Value
-	for v, skillToketRegex := range matchedSkill.TokensRegex {
-		for _, stringTokens := range lex.tokens {
-			if skillToketRegex.MatchString(stringTokens.value) {
-				keys[v] = stringTokens.value
-			}
-		}
-	}
-	log.Println("Keys:")
-	for k, v := range keys {
-		log.Printf("  %s: %s", k, v)
-	}
-	//
-
+	log.Printf("Skill:  %v", skill)
+	// Key extractions
+	keys := getCommandKeys(skill, task.Value)
 	// Command execution
 	// Script goes first
-	for _, script := range matchedSkill.Scripts {
+	for _, script := range skill.Scripts {
 		command, err:= utils.ProcessTemplate(script, keys)
 
 		//out, err := exec.Command("sh","-c",buf.String()).Output()
@@ -112,13 +79,13 @@ func handleTask(config *Configuration, apiClient *api.ApiClient, task *Task) err
 		log.Printf("Command out: %s\n", out)
 	}
 	// Send message if needed
-	if matchedSkill.Message != nil {
-		message, err:= utils.ProcessTemplate(matchedSkill.Message.Text, keys)
+	if skill.Message != nil {
+		message, err:= utils.ProcessTemplate(skill.Message.Text, keys)
 		if err != nil {
 			return err
 		}
 		log.Printf("Send message: %s\n", message)
-		return apiClient.SendMessage(matchedSkill.Message.Channel, message)
+		return apiClient.SendMessage(skill.Message.Channel, message)
 	}
 	return nil
 }

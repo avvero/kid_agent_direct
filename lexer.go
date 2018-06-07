@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"regexp"
+	"log"
 )
 
 type token struct {
@@ -100,4 +101,33 @@ func step(t string, rgx *regexp.Regexp) func(l *lexer) stateFn {
 
 func newLexer(input string) *lexer {
 	return &lexer{0, 0, input, make([]token, 0), nil}
+}
+
+func getTokens(input string) []token {
+	lex := newLexer(input)
+	lex.tokenize()
+	log.Println("Tokens:")
+	for _, v := range  lex.tokens {
+		log.Printf("  %v", v)
+	}
+	return lex.tokens
+}
+
+func getCommandKeys(skill *Skill,input string) (map[string]string) {
+	tokens := getTokens(input)
+	// parse keys
+	keys := make(map[string]string)
+	keys["COMMAND"] = input
+	for v, skillToketRegex := range skill.TokensRegex {
+		for _, stringTokens := range tokens {
+			if skillToketRegex.MatchString(stringTokens.value) {
+				keys[v] = stringTokens.value
+			}
+		}
+	}
+	log.Println("Keys:")
+	for k, v := range keys {
+		log.Printf("  %s: %s", k, v)
+	}
+	return keys
 }
