@@ -1,33 +1,10 @@
 version: 1.0
 host: https://f2g.site/bot/kid
-channel: 29:1d4jXkt5gxQ8MWUx8i-zX1V9OS3alOt1gT5SqU5MlXx8
-skills:
-  - pattern: 'fxbank.*'
-    tokens:
-      TARGET: 'fxbank'
-      TAG: '[\d\.]+'
-    script:
-      - echo '{{.TARGET}} with tag {{.TAG}}'
-
-  - pattern: 'send'
-    tokens:
-      CONVERSATION_ID: 'to\s*'
-    script:
-      - "curl -H \"Content-Type: application/json\" -X POST -d '{\"conversationId\": \"29:1u0eB2K6HZPu605COMMKJTF9l116lj7KvThSXxxxe3Dg\", \"text\": \"test\"}' https://f2g.site/bot/herald/api/message"
-
-# release 2.107.2.0 from branch_2.107
-  - pattern: 'release .*'
-    tokens:
-      TARGET: 'fxbank'
-      TAG: '^[\d\.]+$'
-      BRANCH: 'branch_.*'
-    script:
-      - "please release {{.TAG}} for me from {{.BRANCH}}"
-
+channel: ***
 # echo
   - pattern: '.*'
     script:
       - "{{.COMMAND}}"
     message:
-      channel: 29:1d4jXkt5gxQ8MWUx8i-zX1V9OS3alOt1gT5SqU5MlXx8
+      channel: ***
       text: "Echo: {{.COMMAND}}"
